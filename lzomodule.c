@@ -312,6 +312,51 @@ crc32(PyObject *dummy, PyObject *args)
     return PyInt_FromLong(val);
 }
 
+/***********************************************************************
+// decompress_safe
+************************************************************************/
+
+static /* const */ char decompress_safe__doc__[] =
+"decompress_safe(src, dst_len) -- //  Decompress the data in string, returning a string of the desired output 'dst_len'"
+;
+
+static PyObject *
+decompress_safe(PyObject *dummy, PyObject *args)
+{
+    const lzo_bytep in;
+    lzo_uint in_len;
+    lzo_uint out_len;
+    lzo_bytep out;
+    lzo_uint new_len;
+    PyObject *result_str;
+    int err;
+
+    /* init */
+    UNUSED(dummy);
+    if (!PyArg_ParseTuple(args, "s#i", &in, &in_len, &out_len))
+        return NULL;
+    if (in_len < 0 || out_len < 0)
+        return NULL;
+
+    /* alloc buffers */
+    result_str = PyString_FromStringAndSize(NULL, out_len);
+    if (result_str == NULL)
+        return PyErr_NoMemory();
+
+    /* decompress */
+    out = (lzo_bytep) PyString_AsString(result_str);
+    new_len = out_len;
+    err = lzo1x_decompress_safe(in, in_len, out, &new_len, NULL);
+    if (err != LZO_E_OK || new_len != out_len)
+    {
+        Py_DECREF(result_str);
+        PyErr_Format(LzoError, "Compressed data violation %i new_len %i, out_len %i", err, new_len, out_len);
+        return NULL;
+    }
+
+    /* success */
+    return result_str;
+}
 
 /***********************************************************************
 // main
@@ -319,11 +364,12 @@ crc32(PyObject *dummy, PyObject *args)
 
 static /* const */ PyMethodDef methods[] =
 {
-    {"adler32",    (PyCFunction)adler32,    METH_VARARGS, adler32__doc__},
-    {"compress",   (PyCFunction)compress,   METH_VARARGS, compress__doc__},
-    {"crc32",      (PyCFunction)crc32,      METH_VARARGS, crc32__doc__},
-    {"decompress", (PyCFunction)decompress, METH_VARARGS, decompress__doc__},
-    {"optimize",   (PyCFunction)optimize,   METH_VARARGS, optimize__doc__},
+    {"adler32",         (PyCFunction)adler32,           METH_VARARGS, adler32__doc__},
+    {"compress",        (PyCFunction)compress,          METH_VARARGS, compress__doc__},
+    {"crc32",           (PyCFunction)crc32,             METH_VARARGS, crc32__doc__},
+    {"decompress",      (PyCFunction)decompress,        METH_VARARGS, decompress__doc__},
+    {"optimize",        (PyCFunction)optimize,          METH_VARARGS, optimize__doc__},
+    {"decompress_safe", (PyCFunction)decompress_safe,   METH_VARARGS, decompress_safe__doc__},
     {NULL, NULL, 0, NULL}
 };
 

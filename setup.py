@@ -20,11 +20,11 @@ if sys.platform == "win32":
     # Windows users have to configure the LZO_DIR path parameter to match
     # their LZO source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    LZO_DIR = r"c:\src\lzo-1.08"
+    LZO_DIR = r"C:\lzo-2.09"
     if not os.path.exists(LZO_DIR):
         raise Exception("please set LZO_DIR to where the lzo source lives")
     include_dirs.append(os.path.join(LZO_DIR, "include"))
-    extra_objects.append(os.path.join(LZO_DIR, "lzo.lib"))
+    extra_objects.append(os.path.join(LZO_DIR, "lzo2.lib"))
 else:
     libraries = ["lzo2"]
     include_dirs.append("/usr/include/lzo")
@@ -56,7 +56,7 @@ ext = Extension(
 
 setup_args = get_kw(
     name="python-lzo",
-    version="1.09",
+    version="2.09",
     description="Python bindings for the LZO data compression library",
     author="Markus F.X.J. Oberhumer",
     author_email="markus@oberhumer.com",
